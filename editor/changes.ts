@@ -5148,6 +5148,15 @@ export class ChangeChannelName extends Change {
     }
 }
 
+export class ChangeMidiId extends Change {
+    constructor(doc: SongDocument, oldValue: number, newValue: number) {
+        super();
+        doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()].midiId = newValue;
+        doc.notifier.changed();
+        if (oldValue != newValue) this._didSomething();
+    }
+}
+
 export class ChangePan extends Change {
     constructor(doc: SongDocument, oldValue: number, newValue: number) {
         super();

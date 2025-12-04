@@ -258,7 +258,7 @@ const enum SongTagCode {
     feedbackEnvelope = CharCode.V, // added in BeepBox URL version 6, DEPRECATED
     pulseWidth = CharCode.W, // added in BeepBox URL version 7
     aliases = CharCode.X, // added in JummBox URL version 4 for aliases, DEPRECATED, [UB] repurposed for PWM decimal offset (DEPRECATED as well)
-    //                      = CharCode.Y, 
+    midiId = CharCode.Y, // added in MidiBox version 1
     //	                    = CharCode.Z,
     //	                    = CharCode.NUM_0,
     //	                    = CharCode.NUM_1,
@@ -1640,6 +1640,7 @@ export class Instrument {
     public unisonSign: number = 1.0;
     public effects: number = 0;
     public chord: number = 1;
+    public midiId: number = 0;
     public volume: number = 0;
     public pan: number = Config.panCenter;
     public panDelay: number = 0;
@@ -3651,6 +3652,7 @@ export class Song {
                 const instrument: Instrument = this.channels[channelIndex].instruments[i];
                 buffer.push(SongTagCode.startInstrument, base64IntToCharCode[instrument.type]);
                 buffer.push(SongTagCode.volume, base64IntToCharCode[(instrument.volume + Config.volumeRange / 2) >> 6], base64IntToCharCode[(instrument.volume + Config.volumeRange / 2) & 0x3f]);
+                buffer.push(SongTagCode.midiId, base64IntToCharCode[instrument.midiId >> 6], base64IntToCharCode[instrument.midiId & 63]);
                 buffer.push(SongTagCode.preset, base64IntToCharCode[instrument.preset >> 6], base64IntToCharCode[instrument.preset & 63]);
 
                 buffer.push(SongTagCode.eqFilter);
@@ -5599,6 +5601,11 @@ export class Song {
                     // Volume is stored in two bytes in jummbox just in case range ever exceeds one byte, e.g. through later waffling on the subject.
                     instrument.volume = Math.round(clamp(-Config.volumeRange / 2, Config.volumeRange / 2 + 1, ((base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | (base64CharCodeToInt[compressed.charCodeAt(charIndex++)])) - Config.volumeRange / 2));
                 }
+            } break;
+            case SongTagCode.midiId: {
+                const instrument: Instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
+                const midiValue: number = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | (base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                instrument.midiId = midiValue;
             } break;
             case SongTagCode.pan: {
                 if (beforeNine && fromBeepBox) {
@@ -9974,7 +9981,7 @@ export class Synth {
         return (this.beat * Config.partsPerBeat + this.part);
     }
 
-    private findPartsInBar(bar: number): number {
+    public findPartsInBar(bar: number): number {
         if (this.song == null) return 0;
         let partsInBar: number = Config.partsPerBeat * this.song.beatsPerBar;
         for (let channel: number = this.song.pitchChannelCount + this.song.noiseChannelCount; channel < this.song.getChannelCount(); channel++) {

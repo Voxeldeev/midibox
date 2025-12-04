@@ -72,17 +72,7 @@ export class ExportPrompt implements Prompt {
         this._outputProgressBar,
         this._outputProgressLabel,
     );
-    private static readonly midiChipInstruments: number[] = [
-        0x4A, // rounded -> recorder
-        0x47, // triangle -> clarinet
-        0x50, // square -> square wave
-        0x46, // ¹/₄ pulse -> bassoon
-        0x44, // ¹/₈ pulse -> oboe
-        0x51, // sawtooth -> sawtooth wave
-        0x51, // double saw -> sawtooth wave
-        0x51, // double pulse -> sawtooth wave
-        0x51, // spiky -> sawtooth wave
-    ];
+   
 
     public readonly container: HTMLDivElement = div({ class: "prompt noSelection", style: "width: 200px;" },
         h2("Export Options"),
@@ -462,9 +452,14 @@ export class ExportPrompt implements Prompt {
         const beatsPerMinute: number = song.getBeatsPerMinute();
         const microsecondsPerBeat: number = Math.round(microsecondsPerMinute / beatsPerMinute);
         //const secondsPerMidiTick: number = secondsPerMinute / (midiTicksPerBeat * beatsPerMinute);
-        const midiTicksPerBar: number = midiTicksPerBeat * song.beatsPerBar;
+        // const midiTicksPerBar: number = midiTicksPerBeat * song.beatsPerBar;
         const pitchBendRange: number = 24;
         const defaultNoteVelocity: number = 90;
+
+        const findBarLength = (bar: number): number => {
+            let partsInBar: number = this._doc.synth.findPartsInBar(bar);
+            return partsInBar * midiTicksPerPart;
+        };
 
         const unrolledBars: number[] = [];
         if (this._enableIntro.checked) {
@@ -483,18 +478,35 @@ export class ExportPrompt implements Prompt {
             }
         }
 
+        const barLengths: number[] = [];
+        for (let bar: number = 0; bar < song.barCount; bar++) {
+            barLengths.push(findBarLength(bar));
+        }
+
         const tracks = [{ isMeta: true, channel: -1, midiChannel: -1, isNoise: false, isDrumset: false }];
         let midiChannelCounter: number = 0;
-        let foundADrumset: boolean = false;
+        
         for (let channel: number = 0; channel < this._doc.song.pitchChannelCount + this._doc.song.noiseChannelCount; channel++) {
-            if (!foundADrumset && this._doc.song.channels[channel].instruments[0].type == InstrumentType.drumset) {
+            let midiId: number = this._doc.song.channels[channel].instruments[0].midiId;
+            
+            
+            if (midiId > 127) {
+                tracks.push({ isMeta: false, channel: channel, midiChannel: 9, isNoise: true, isDrumset: true });
+            } else {
+                if (midiChannelCounter >= 16) continue; // The MIDI standard only supports 16 channels.
+                tracks.push({ isMeta: false, channel: channel, midiChannel: midiChannelCounter++, isNoise: this._doc.song.getChannelIsNoise(channel), isDrumset: false });
+                 if (midiChannelCounter == 9) midiChannelCounter++; // skip midi drum channel.
+            }
+
+            /* if (!foundADrumset && this._doc.song.channels[channel].instruments[0].type == InstrumentType.drumset) {
                 tracks.push({ isMeta: false, channel: channel, midiChannel: 9, isNoise: true, isDrumset: true });
                 foundADrumset = true; // There can only be one drumset channel, and it's always channel 9 (seen as 10 in most UIs). :/
             } else {
                 if (midiChannelCounter >= 16) continue; // The MIDI standard only supports 16 channels.
                 tracks.push({ isMeta: false, channel: channel, midiChannel: midiChannelCounter++, isNoise: this._doc.song.getChannelIsNoise(channel), isDrumset: false });
                 if (midiChannelCounter == 9) midiChannelCounter++; // skip midi drum channel.
-            }
+            } */
+
         }
 
         const writer: ArrayBufferWriter = new ArrayBufferWriter(1024);
@@ -527,6 +539,19 @@ export class ExportPrompt implements Prompt {
                 writer.writeMidi7Bits(message);
                 writer.writeMidi7Bits(value | 0);
             }
+            let prevBeatsPerBar: number = song.beatsPerBar;
+            const writeTimeSignature = (beatsPerBar: number): void => {
+                if (beatsPerBar === prevBeatsPerBar) return;
+                writeEventTime(barStartTime);
+                writer.writeUint8(MidiEventType.meta);
+                writer.writeMidi7Bits(MidiMetaEventMessage.timeSignature);
+                writer.writeMidiVariableLength(4); // Time signature message length is 4 bytes.
+                writer.writeUint8(beatsPerBar); // numerator.
+                writer.writeUint8(2); // denominator exponent in 2^E. 2^2 = 4, and we will always use "quarter" notes.
+                writer.writeUint8(24); // MIDI Clocks per metronome tick (should match beats), standard is 24
+                writer.writeUint8(8); // number of 1/32 notes per 24 MIDI Clocks, standard is 8, meaning 24 clocks per "quarter" note.
+                prevBeatsPerBar = beatsPerBar;
+            };
 
             if (isMeta) {
                 // for first midi track, include tempo, time signature, and key signature information.
@@ -534,7 +559,7 @@ export class ExportPrompt implements Prompt {
                 writeEventTime(0);
                 writer.writeUint8(MidiEventType.meta);
                 writer.writeMidi7Bits(MidiMetaEventMessage.text);
-                writer.writeMidiAscii("Composed with jummbus.bitbucket.io");
+                writer.writeMidiAscii("Composed with Midibox");
 
                 writeEventTime(0);
                 writer.writeUint8(MidiEventType.meta);
@@ -565,22 +590,55 @@ export class ExportPrompt implements Prompt {
                 writer.writeInt8(numSharps); // See above calculation. Assumes scale is diatonic. :/
                 writer.writeUint8(isMinor ? 1 : 0); // 0: major, 1: minor
 
-                if (this._enableIntro.checked) barStartTime += midiTicksPerBar * song.loopStart;
+                // if (this._enableIntro.checked) barStartTime += midiTicksPerBar * song.loopStart;
+                if (this._enableIntro.checked) {
+                    for (let bar: number = 0; bar < song.loopStart; bar++) {
+                        let midiTicksPerBar: number = barLengths[bar];
+                        const beatsPerBar: number = midiTicksPerBar / midiTicksPerPart / Config.partsPerBeat;
+                        const beatsPerBarInt: number = Math.floor(beatsPerBar);
+                        writeTimeSignature(beatsPerBarInt);
+                        barStartTime += midiTicksPerBar;
+                    }
+                }
                 writeEventTime(barStartTime);
                 writer.writeUint8(MidiEventType.meta);
                 writer.writeMidi7Bits(MidiMetaEventMessage.marker);
                 writer.writeMidiAscii("Loop Start");
 
                 for (let loopIndex: number = 0; loopIndex < parseInt(this._loopDropDown.value); loopIndex++) {
-                    barStartTime += midiTicksPerBar * song.loopLength;
+                    // barStartTime += midiTicksPerBar * song.loopLength;
+                    for (let bar: number = song.loopStart; bar < song.loopStart + song.loopLength; bar++) {
+                        let midiTicksPerBar: number = barLengths[bar];
+                        const beatsPerBar: number = midiTicksPerBar / midiTicksPerPart / Config.partsPerBeat;
+                        const beatsPerBarInt: number = Math.floor(beatsPerBar);
+                        writeTimeSignature(beatsPerBarInt);
+                        barStartTime += midiTicksPerBar;
+                    }
                     writeEventTime(barStartTime);
                     writer.writeUint8(MidiEventType.meta);
                     writer.writeMidi7Bits(MidiMetaEventMessage.marker);
                     writer.writeMidiAscii(loopIndex < Number(this._loopDropDown.value) - 1 ? "Loop Repeat" : "Loop End");
                 }
 
-                if (this._enableOutro.checked) barStartTime += midiTicksPerBar * (song.barCount - song.loopStart - song.loopLength);
-                if (barStartTime != midiTicksPerBar * unrolledBars.length) throw new Error("Miscalculated number of bars.");
+                // if (this._enableOutro.checked) barStartTime += midiTicksPerBar * (song.barCount - song.loopStart - song.loopLength);
+                 if (this._enableOutro.checked) {
+                    for (let bar: number = song.loopStart + song.loopLength; bar < song.barCount; bar++) {
+                        let midiTicksPerBar: number = barLengths[bar];
+                        const beatsPerBar: number = midiTicksPerBar / midiTicksPerPart / Config.partsPerBeat;
+                        const beatsPerBarInt: number = Math.floor(beatsPerBar);
+                        writeTimeSignature(beatsPerBarInt);
+                        barStartTime += midiTicksPerBar;
+                    }
+                }
+                // if (barStartTime != midiTicksPerBar * unrolledBars.length) throw new Error("Miscalculated number of bars.");
+                {
+                    let total: number = 0;
+                    for (const bar of unrolledBars) {
+                        let midiTicksPerBar: number = barLengths[bar];
+                        total += midiTicksPerBar;
+                    }
+                    if (barStartTime != total) throw new Error("Miscalculated number of bars.");
+                }
 
             } else {
                 // For remaining tracks, set up the instruments and write the notes:
@@ -604,7 +662,7 @@ export class ExportPrompt implements Prompt {
                 let prevInstrumentIndex: number = -1;
                 function writeInstrumentSettings(instrumentIndex: number): void {
                     const instrument: Instrument = song.channels[channel].instruments[instrumentIndex];
-                    const preset: Preset | null = EditorConfig.valueToPreset(instrument.preset);
+                    // const preset: Preset | null = EditorConfig.valueToPreset(instrument.preset);
 
                     if (prevInstrumentIndex != instrumentIndex) {
                         prevInstrumentIndex = instrumentIndex;
@@ -614,11 +672,14 @@ export class ExportPrompt implements Prompt {
                         writer.writeMidiAscii("Instrument " + (instrumentIndex + 1));
 
                         if (!isDrumset) {
-                            let instrumentProgram: number = 81; // default to sawtooth wave. 
+                            let instrumentProgram: number = instrument.midiId; // default to MidiID
 
+                            /*
                             if (preset != null && preset.midiProgram != undefined) {
-                                instrumentProgram = preset.midiProgram;
-                            } else if (instrument.type == InstrumentType.drumset) {
+                                instrumentProgram = instrument.midiId; // MidiID
+                            } 
+                            
+                            else if (instrument.type == InstrumentType.drumset) {
                                 // The first BeepBox drumset channel is handled as a Midi drumset channel and doesn't need a program, but any subsequent drumsets will just be set to taiko.
                                 instrumentProgram = 116; // taiko
                             } else {
@@ -626,22 +687,25 @@ export class ExportPrompt implements Prompt {
                                     if (isNoise) {
                                         instrumentProgram = 116; // taiko
                                     } else {
-                                        instrumentProgram = 75; // pan flute
+                                        instrumentProgram = instrument.midiId; // MidiID
                                     }
+                                
                                 } else if (instrument.type == InstrumentType.chip) {
                                     if (ExportPrompt.midiChipInstruments.length > instrument.chipWave) {
-                                        instrumentProgram = ExportPrompt.midiChipInstruments[instrument.chipWave];
+                                        instrumentProgram = instrument.midiId; // MidiID
                                     }
                                 } else if (instrument.type == InstrumentType.pwm || instrument.type == InstrumentType.fm || instrument.type == InstrumentType.fm6op || instrument.type == InstrumentType.harmonics || instrument.type == InstrumentType.supersaw) {
-                                    instrumentProgram = 81; // sawtooth
+                                    instrumentProgram = instrument.midiId; // MidiID
                                 } else if (instrument.type == InstrumentType.pickedString) {
-                                    instrumentProgram = 0x19; // steel guitar
+                                    instrumentProgram = instrument.midiId; // MidiID
                                 } else if (instrument.type == InstrumentType.customChipWave) {
-                                    instrumentProgram = 81; // sawtooth
+                                    instrumentProgram = instrument.midiId; // MidiID
                                 } else {
                                     throw new Error("Unrecognized instrument type.");
-                                }
+                                } 
+                            
                             }
+                            */
 
                             // Program (instrument) change event:
                             writeEventTime(barStartTime);
@@ -676,6 +740,9 @@ export class ExportPrompt implements Prompt {
                 for (const bar of unrolledBars) {
                     const pattern: Pattern | null = song.getPattern(channel, bar);
 
+                    let midiTicksPerBar: number = barLengths[bar];
+                    const barEndTime: number = barStartTime + midiTicksPerBar;
+
                     if (pattern != null) {
 
                         const instrumentIndex: number = pattern.instruments[0]; // Don't bother trying to export multiple instruments per pattern to midi, just pick the first one.
@@ -699,7 +766,11 @@ export class ExportPrompt implements Prompt {
                         for (let noteIndex: number = 0; noteIndex < pattern.notes.length; noteIndex++) {
                             const note: Note = pattern.notes[noteIndex];
 
-                            const noteStartTime: number = barStartTime + note.start * midiTicksPerPart;
+                            let noteStartTime: number = barStartTime + note.start * midiTicksPerPart;
+                            if (noteStartTime > barEndTime) noteStartTime = barEndTime;
+                            let noteEndTime: number = barStartTime + note.end * midiTicksPerPart;
+                            if (noteEndTime > barEndTime) noteEndTime = barEndTime;
+                            if (noteStartTime >= noteEndTime) continue;
                             let pinTime: number = noteStartTime;
                             let pinSize: number = note.pins[0].size;
                             let pinInterval: number = note.pins[0].interval;
@@ -745,7 +816,11 @@ export class ExportPrompt implements Prompt {
 
                                 const length: number = nextPinTime - pinTime;
                                 for (let midiTick: number = 0; midiTick < length; midiTick++) {
-                                    const midiTickTime: number = pinTime + midiTick;
+                                    let midiTickTime: number = pinTime + midiTick;
+                                    if (midiTickTime > barEndTime) {
+                                        midiTickTime = barEndTime;
+                                        pinIndex = note.pins.length;
+                                    }
                                     const linearSize: number = lerp(pinSize, nextPinSize, midiTick / length);
                                     const linearInterval: number = lerp(pinInterval, nextPinInterval, midiTick / length);
 
@@ -773,11 +848,11 @@ export class ExportPrompt implements Prompt {
                                     for (let toneIndex: number = 0; toneIndex < toneCount; toneIndex++) {
                                         let nextPitch: number = note.pitches[toneIndex];
                                         if (isDrumset) {
-                                            nextPitch += mainInterval;
+                                            /* nextPitch += mainInterval;
                                             const drumsetMap: number[] = [
                                                 36, // Bass Drum 1
                                                 41, // Low Floor Tom
-                                                45, // Low Tom
+                                                45, // Low To m
                                                 48, // Hi-Mid Tom
                                                 40, // Electric Snare
                                                 39, // Hand Clap
@@ -789,7 +864,11 @@ export class ExportPrompt implements Prompt {
                                                 54, // Tambourine
                                             ];
                                             if (nextPitch < 0 || nextPitch >= drumsetMap.length) throw new Error("Could not find corresponding drumset pitch. " + nextPitch);
+
                                             nextPitch = drumsetMap[nextPitch];
+                                            */
+                                            nextPitch = instrument.midiId - 101; // Midi Drum instruments start at 26 and melodic inststuments end at 127
+
                                         } else {
                                             if (usesArpeggio && note.pitches.length > toneIndex + 1 && toneIndex == toneCount - 1) {
                                                 const midiTicksSinceBeat = (midiTickTime - barStartTime) % midiTicksPerBeat;
@@ -832,8 +911,6 @@ export class ExportPrompt implements Prompt {
                                 pinSize = nextPinSize;
                                 pinInterval = nextPinInterval;
                             }
-
-                            const noteEndTime: number = barStartTime + note.end * midiTicksPerPart;
 
                             // End all tones.
                             for (let toneIndex: number = 0; toneIndex < toneCount; toneIndex++) {

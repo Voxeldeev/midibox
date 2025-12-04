@@ -8662,8 +8662,8 @@ var beepbox = (function (exports) {
             return (_a = EditorConfig.presetCategories[0].presets.dictionary) === null || _a === void 0 ? void 0 : _a[TypePresets === null || TypePresets === void 0 ? void 0 : TypePresets[instrument]];
         }
     }
-    EditorConfig.version = "1.4.9";
-    EditorConfig.versionDisplayName = "Slarmoo's Box " + EditorConfig.version;
+    EditorConfig.version = "1.0";
+    EditorConfig.versionDisplayName = "MidiBox " + EditorConfig.version;
     EditorConfig.releaseNotesURL = "./patch_notes.html";
     EditorConfig.isOnMac = /^Mac/i.test(navigator.platform) || /Mac OS X/i.test(navigator.userAgent) || /^(iPhone|iPad|iPod)/i.test(navigator.platform) || /(iPhone|iPad|iPod)/i.test(navigator.userAgent);
     EditorConfig.ctrlSymbol = EditorConfig.isOnMac ? "⌘" : "Ctrl+";
@@ -10872,6 +10872,7 @@ var beepbox = (function (exports) {
             this.unisonSign = 1.0;
             this.effects = 0;
             this.chord = 1;
+            this.midiId = 0;
             this.volume = 0;
             this.pan = Config.panCenter;
             this.panDelay = 0;
@@ -12696,6 +12697,7 @@ var beepbox = (function (exports) {
                     const instrument = this.channels[channelIndex].instruments[i];
                     buffer.push(84, base64IntToCharCode[instrument.type]);
                     buffer.push(118, base64IntToCharCode[(instrument.volume + Config.volumeRange / 2) >> 6], base64IntToCharCode[(instrument.volume + Config.volumeRange / 2) & 0x3f]);
+                    buffer.push(89, base64IntToCharCode[instrument.midiId >> 6], base64IntToCharCode[instrument.midiId & 63]);
                     buffer.push(117, base64IntToCharCode[instrument.preset >> 6], base64IntToCharCode[instrument.preset & 63]);
                     buffer.push(102);
                     buffer.push(base64IntToCharCode[+instrument.eqFilterType]);
@@ -14537,6 +14539,13 @@ var beepbox = (function (exports) {
                                 const instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
                                 instrument.volume = Math.round(clamp(-Config.volumeRange / 2, Config.volumeRange / 2 + 1, ((base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | (base64CharCodeToInt[compressed.charCodeAt(charIndex++)])) - Config.volumeRange / 2));
                             }
+                        }
+                        break;
+                    case 89:
+                        {
+                            const instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
+                            const midiValue = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | (base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            instrument.midiId = midiValue;
                         }
                         break;
                     case 76:

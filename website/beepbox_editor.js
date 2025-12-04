@@ -1645,6 +1645,200 @@ var beepbox = (function (exports) {
     function prettyNumber(value) {
         return value.toFixed(2).replace(/\.?0*$/, "");
     }
+    function midiToGM(value) {
+        let names = [
+            "Acoustic Grand Piano",
+            "Bright Piano",
+            "Electric Grand Piano",
+            "Honky-tonk Piano",
+            "Electric Piano 1",
+            "Electric Piano 2",
+            "Harpsichord",
+            "Clavinet",
+            "Celesta",
+            "Glockenspiel",
+            "Music Box",
+            "Vibraphone",
+            "Marimba",
+            "Xylophone",
+            "Tubular Bells",
+            "Dulcimer",
+            "Drawbar Organ",
+            "Percussive Organ",
+            "Rock Organ",
+            "Church Organ",
+            "Reed Organ",
+            "Accordion",
+            "Harmonica",
+            "Tango Accordion",
+            "Nylon Acoustic Guitar",
+            "Steel Acoustic Guitar",
+            "Jazz Electric Guitar",
+            "Clean Electric Guitar",
+            "Muted Electric Guitar",
+            "Overdriven Guitar",
+            "Distortion Guitar",
+            "Guitar harmonics",
+            "Acoustic Bass",
+            "Finger Electric Bass",
+            "Picked Electric Bass",
+            "Fretless Bass",
+            "Slap Bass 1",
+            "Slap Bass 2",
+            "Synth Bass 1",
+            "Synth Bass 2",
+            "Violin",
+            "Viola",
+            "Cello",
+            "Contrabass",
+            "Tremolo Strings",
+            "Pizzicato Strings",
+            "Orchestral Harp",
+            "Timpani",
+            "String Ensemble 1",
+            "String Ensemble 2",
+            "Synth Strings 1",
+            "Synth Strings 2",
+            "Choir Aahs",
+            "Voice Oohs",
+            "Synth Voice",
+            "Orchestra Hit",
+            "Trumpet",
+            "Trombone",
+            "Tuba",
+            "Muted Trumpet",
+            "French Horn",
+            "Brass Section",
+            "Synth Brass 1",
+            "Synth Brass 2",
+            "Soprano Sax",
+            "Alto Sax",
+            "Tenor Sax",
+            "Baritone Sax",
+            "Oboe",
+            "English Horn",
+            "Bassoon",
+            "Clarinet",
+            "Piccolo",
+            "Flute",
+            "Recorder",
+            "Pan Flute",
+            "Blown Bottle",
+            "Shakuhachi",
+            "Whistle",
+            "Ocarina",
+            "Lead 1 (Square)",
+            "Lead 2 (Sawtooth)",
+            "Lead 3 (Calliope)",
+            "Lead 4 (Chiff)",
+            "Lead 5 (Charang)",
+            "Lead 6 (Voice)",
+            "Lead 7 (Fifths)",
+            "Lead 8 (Bass + Lead)",
+            "Pad 1 (New age)",
+            "Pad 2 (Warm)",
+            "Pad 3 (Polysynth)",
+            "Pad 4 (Choir)",
+            "Pad 5 (Bowed)",
+            "Pad 6 (Metallic)",
+            "Pad 7 (Halo)",
+            "Pad 8 (Sweep)",
+            "FX 1 (Rain)",
+            "FX 2 (Soundtrack)",
+            "FX 3 (Crystal)",
+            "FX 4 (Atmosphere)",
+            "FX 5 (Brightness)",
+            "FX 6 (Goblins)",
+            "FX 7 (Echoes)",
+            "FX 8 (Sci-fi)",
+            "Sitar",
+            "Banjo",
+            "Shamisen",
+            "Koto",
+            "Kalimba",
+            "Bag pipe",
+            "Fiddle",
+            "Shanai",
+            "Tinkle Bell",
+            "Agogo",
+            "Steel Drums",
+            "Woodblock",
+            "Taiko Drum",
+            "Melodic Tom",
+            "Synth Drum",
+            "Reverse Cymbal",
+            "Guitar Fret Noise",
+            "Breath Noise",
+            "Seashore",
+            "Bird Tweet",
+            "Telephone Ring",
+            "Helicopter",
+            "Applause",
+            "Gunshot",
+            "High Q",
+            "Slap",
+            "Scratch Push",
+            "Scratch Pull",
+            "Sticks",
+            "Square Click",
+            "Metronome Click",
+            "Metronome Bell",
+            "Bass Drum 2",
+            "Bass Drum 1",
+            "Side Stick",
+            "Snare Drum 1",
+            "Hand Clap",
+            "Snare Drum 2",
+            "Low Tom 2",
+            "Closed Hi-hat",
+            "Low Tom 1",
+            "Pedal Hi-hat",
+            "Mid Tom 2",
+            "Open Hi-hat",
+            "Mid Tom 1",
+            "High Tom 2",
+            "Crash Cymbal 1",
+            "High Tom 1",
+            "Ride Cymbal 1",
+            "Chinese Cymbal",
+            "Ride Bell",
+            "Tambourine",
+            "Splash Cymbal",
+            "Cowbell",
+            "Crash Cymbal 2",
+            "Vibra Slap",
+            "Ride Cymbal 2",
+            "High Bongo",
+            "Low Bongo",
+            "Mute High Conga",
+            "Open High Conga",
+            "Low Conga",
+            "High Timbale",
+            "Low Timbale",
+            "High Agogo",
+            "Low Agogo",
+            "Cabasa",
+            "Maracas",
+            "Short Whistle",
+            "Long Whistle",
+            "Short Guiro",
+            "Long Guiro",
+            "Claves",
+            "High Wood Block",
+            "Low Wood Block",
+            "Mute Cuica",
+            "Open Cuica",
+            "Mute Triangle",
+            "Open Triangle",
+            "Shaker",
+            "Jingle Bell",
+            "Belltree",
+            "Castanets",
+            "Mute Surdo",
+            "Open Surdo",
+        ];
+        return names[value];
+    }
     class EditorConfig {
         static valueToPreset(presetValue) {
             var _a;
@@ -1679,8 +1873,8 @@ var beepbox = (function (exports) {
             return (_a = EditorConfig.presetCategories[0].presets.dictionary) === null || _a === void 0 ? void 0 : _a[TypePresets === null || TypePresets === void 0 ? void 0 : TypePresets[instrument]];
         }
     }
-    EditorConfig.version = "1.4.9";
-    EditorConfig.versionDisplayName = "Slarmoo's Box " + EditorConfig.version;
+    EditorConfig.version = "1.0";
+    EditorConfig.versionDisplayName = "MidiBox " + EditorConfig.version;
     EditorConfig.releaseNotesURL = "./patch_notes.html";
     EditorConfig.isOnMac = /^Mac/i.test(navigator.platform) || /Mac OS X/i.test(navigator.userAgent) || /^(iPhone|iPad|iPod)/i.test(navigator.platform) || /(iPhone|iPad|iPod)/i.test(navigator.userAgent);
     EditorConfig.ctrlSymbol = EditorConfig.isOnMac ? "⌘" : "Ctrl+";
@@ -12765,6 +12959,7 @@ li.select2-results__option[role=group] > strong:hover {
             this.unisonSign = 1.0;
             this.effects = 0;
             this.chord = 1;
+            this.midiId = 0;
             this.volume = 0;
             this.pan = Config.panCenter;
             this.panDelay = 0;
@@ -14589,6 +14784,7 @@ li.select2-results__option[role=group] > strong:hover {
                     const instrument = this.channels[channelIndex].instruments[i];
                     buffer.push(84, base64IntToCharCode[instrument.type]);
                     buffer.push(118, base64IntToCharCode[(instrument.volume + Config.volumeRange / 2) >> 6], base64IntToCharCode[(instrument.volume + Config.volumeRange / 2) & 0x3f]);
+                    buffer.push(89, base64IntToCharCode[instrument.midiId >> 6], base64IntToCharCode[instrument.midiId & 63]);
                     buffer.push(117, base64IntToCharCode[instrument.preset >> 6], base64IntToCharCode[instrument.preset & 63]);
                     buffer.push(102);
                     buffer.push(base64IntToCharCode[+instrument.eqFilterType]);
@@ -16430,6 +16626,13 @@ li.select2-results__option[role=group] > strong:hover {
                                 const instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
                                 instrument.volume = Math.round(clamp(-Config.volumeRange / 2, Config.volumeRange / 2 + 1, ((base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | (base64CharCodeToInt[compressed.charCodeAt(charIndex++)])) - Config.volumeRange / 2));
                             }
+                        }
+                        break;
+                    case 89:
+                        {
+                            const instrument = this.channels[instrumentChannelIterator].instruments[instrumentIndexIterator];
+                            const midiValue = (base64CharCodeToInt[compressed.charCodeAt(charIndex++)] << 6) | (base64CharCodeToInt[compressed.charCodeAt(charIndex++)]);
+                            instrument.midiId = midiValue;
                         }
                         break;
                     case 76:
@@ -30748,6 +30951,15 @@ li.select2-results__option[role=group] > strong:hover {
                 this._didSomething();
         }
     }
+    class ChangeMidiId extends Change {
+        constructor(doc, oldValue, newValue) {
+            super();
+            doc.song.channels[doc.channel].instruments[doc.getCurrentInstrument()].midiId = newValue;
+            doc.notifier.changed();
+            if (oldValue != newValue)
+                this._didSomething();
+        }
+    }
     class ChangePan extends Change {
         constructor(doc, oldValue, newValue) {
             super();
@@ -33927,9 +34139,12 @@ li.select2-results__option[role=group] > strong:hover {
             const microsecondsPerMinute = secondsPerMinute * 1000000;
             const beatsPerMinute = song.getBeatsPerMinute();
             const microsecondsPerBeat = Math.round(microsecondsPerMinute / beatsPerMinute);
-            const midiTicksPerBar = midiTicksPerBeat * song.beatsPerBar;
             const pitchBendRange = 24;
             const defaultNoteVelocity = 90;
+            const findBarLength = (bar) => {
+                let partsInBar = this._doc.synth.findPartsInBar(bar);
+                return partsInBar * midiTicksPerPart;
+            };
             const unrolledBars = [];
             if (this._enableIntro.checked) {
                 for (let bar = 0; bar < song.loopStart; bar++) {
@@ -33946,13 +34161,16 @@ li.select2-results__option[role=group] > strong:hover {
                     unrolledBars.push(bar);
                 }
             }
+            const barLengths = [];
+            for (let bar = 0; bar < song.barCount; bar++) {
+                barLengths.push(findBarLength(bar));
+            }
             const tracks = [{ isMeta: true, channel: -1, midiChannel: -1, isNoise: false, isDrumset: false }];
             let midiChannelCounter = 0;
-            let foundADrumset = false;
             for (let channel = 0; channel < this._doc.song.pitchChannelCount + this._doc.song.noiseChannelCount; channel++) {
-                if (!foundADrumset && this._doc.song.channels[channel].instruments[0].type == 4) {
+                let midiId = this._doc.song.channels[channel].instruments[0].midiId;
+                if (midiId > 127) {
                     tracks.push({ isMeta: false, channel: channel, midiChannel: 9, isNoise: true, isDrumset: true });
-                    foundADrumset = true;
                 }
                 else {
                     if (midiChannelCounter >= 16)
@@ -33988,11 +34206,25 @@ li.select2-results__option[role=group] > strong:hover {
                     writer.writeMidi7Bits(message);
                     writer.writeMidi7Bits(value | 0);
                 };
+                let prevBeatsPerBar = song.beatsPerBar;
+                const writeTimeSignature = (beatsPerBar) => {
+                    if (beatsPerBar === prevBeatsPerBar)
+                        return;
+                    writeEventTime(barStartTime);
+                    writer.writeUint8(255);
+                    writer.writeMidi7Bits(88);
+                    writer.writeMidiVariableLength(4);
+                    writer.writeUint8(beatsPerBar);
+                    writer.writeUint8(2);
+                    writer.writeUint8(24);
+                    writer.writeUint8(8);
+                    prevBeatsPerBar = beatsPerBar;
+                };
                 if (isMeta) {
                     writeEventTime(0);
                     writer.writeUint8(255);
                     writer.writeMidi7Bits(1);
-                    writer.writeMidiAscii("Composed with jummbus.bitbucket.io");
+                    writer.writeMidiAscii("Composed with Midibox");
                     writeEventTime(0);
                     writer.writeUint8(255);
                     writer.writeMidi7Bits(81);
@@ -34022,23 +34254,50 @@ li.select2-results__option[role=group] > strong:hover {
                     writer.writeMidiVariableLength(2);
                     writer.writeInt8(numSharps);
                     writer.writeUint8(isMinor ? 1 : 0);
-                    if (this._enableIntro.checked)
-                        barStartTime += midiTicksPerBar * song.loopStart;
+                    if (this._enableIntro.checked) {
+                        for (let bar = 0; bar < song.loopStart; bar++) {
+                            let midiTicksPerBar = barLengths[bar];
+                            const beatsPerBar = midiTicksPerBar / midiTicksPerPart / Config.partsPerBeat;
+                            const beatsPerBarInt = Math.floor(beatsPerBar);
+                            writeTimeSignature(beatsPerBarInt);
+                            barStartTime += midiTicksPerBar;
+                        }
+                    }
                     writeEventTime(barStartTime);
                     writer.writeUint8(255);
                     writer.writeMidi7Bits(6);
                     writer.writeMidiAscii("Loop Start");
                     for (let loopIndex = 0; loopIndex < parseInt(this._loopDropDown.value); loopIndex++) {
-                        barStartTime += midiTicksPerBar * song.loopLength;
+                        for (let bar = song.loopStart; bar < song.loopStart + song.loopLength; bar++) {
+                            let midiTicksPerBar = barLengths[bar];
+                            const beatsPerBar = midiTicksPerBar / midiTicksPerPart / Config.partsPerBeat;
+                            const beatsPerBarInt = Math.floor(beatsPerBar);
+                            writeTimeSignature(beatsPerBarInt);
+                            barStartTime += midiTicksPerBar;
+                        }
                         writeEventTime(barStartTime);
                         writer.writeUint8(255);
                         writer.writeMidi7Bits(6);
                         writer.writeMidiAscii(loopIndex < Number(this._loopDropDown.value) - 1 ? "Loop Repeat" : "Loop End");
                     }
-                    if (this._enableOutro.checked)
-                        barStartTime += midiTicksPerBar * (song.barCount - song.loopStart - song.loopLength);
-                    if (barStartTime != midiTicksPerBar * unrolledBars.length)
-                        throw new Error("Miscalculated number of bars.");
+                    if (this._enableOutro.checked) {
+                        for (let bar = song.loopStart + song.loopLength; bar < song.barCount; bar++) {
+                            let midiTicksPerBar = barLengths[bar];
+                            const beatsPerBar = midiTicksPerBar / midiTicksPerPart / Config.partsPerBeat;
+                            const beatsPerBarInt = Math.floor(beatsPerBar);
+                            writeTimeSignature(beatsPerBarInt);
+                            barStartTime += midiTicksPerBar;
+                        }
+                    }
+                    {
+                        let total = 0;
+                        for (const bar of unrolledBars) {
+                            let midiTicksPerBar = barLengths[bar];
+                            total += midiTicksPerBar;
+                        }
+                        if (barStartTime != total)
+                            throw new Error("Miscalculated number of bars.");
+                    }
                 }
                 else {
                     let channelName = isNoise
@@ -34063,7 +34322,6 @@ li.select2-results__option[role=group] > strong:hover {
                     let prevInstrumentIndex = -1;
                     function writeInstrumentSettings(instrumentIndex) {
                         const instrument = song.channels[channel].instruments[instrumentIndex];
-                        const preset = EditorConfig.valueToPreset(instrument.preset);
                         if (prevInstrumentIndex != instrumentIndex) {
                             prevInstrumentIndex = instrumentIndex;
                             writeEventTime(barStartTime);
@@ -34071,40 +34329,7 @@ li.select2-results__option[role=group] > strong:hover {
                             writer.writeMidi7Bits(4);
                             writer.writeMidiAscii("Instrument " + (instrumentIndex + 1));
                             if (!isDrumset) {
-                                let instrumentProgram = 81;
-                                if (preset != null && preset.midiProgram != undefined) {
-                                    instrumentProgram = preset.midiProgram;
-                                }
-                                else if (instrument.type == 4) {
-                                    instrumentProgram = 116;
-                                }
-                                else {
-                                    if (instrument.type == 2 || instrument.type == 3) {
-                                        if (isNoise) {
-                                            instrumentProgram = 116;
-                                        }
-                                        else {
-                                            instrumentProgram = 75;
-                                        }
-                                    }
-                                    else if (instrument.type == 0) {
-                                        if (ExportPrompt.midiChipInstruments.length > instrument.chipWave) {
-                                            instrumentProgram = ExportPrompt.midiChipInstruments[instrument.chipWave];
-                                        }
-                                    }
-                                    else if (instrument.type == 6 || instrument.type == 1 || instrument.type == 11 || instrument.type == 5 || instrument.type == 8) {
-                                        instrumentProgram = 81;
-                                    }
-                                    else if (instrument.type == 7) {
-                                        instrumentProgram = 0x19;
-                                    }
-                                    else if (instrument.type == 9) {
-                                        instrumentProgram = 81;
-                                    }
-                                    else {
-                                        throw new Error("Unrecognized instrument type.");
-                                    }
-                                }
+                                let instrumentProgram = instrument.midiId;
                                 writeEventTime(barStartTime);
                                 writer.writeUint8(192 | midiChannel);
                                 writer.writeMidi7Bits(instrumentProgram);
@@ -34127,6 +34352,8 @@ li.select2-results__option[role=group] > strong:hover {
                     const intervalScale = isNoise ? Config.noiseInterval : 1;
                     for (const bar of unrolledBars) {
                         const pattern = song.getPattern(channel, bar);
+                        let midiTicksPerBar = barLengths[bar];
+                        const barEndTime = barStartTime + midiTicksPerBar;
                         if (pattern != null) {
                             const instrumentIndex = pattern.instruments[0];
                             const instrument = song.channels[channel].instruments[instrumentIndex];
@@ -34148,7 +34375,14 @@ li.select2-results__option[role=group] > strong:hover {
                             }
                             for (let noteIndex = 0; noteIndex < pattern.notes.length; noteIndex++) {
                                 const note = pattern.notes[noteIndex];
-                                const noteStartTime = barStartTime + note.start * midiTicksPerPart;
+                                let noteStartTime = barStartTime + note.start * midiTicksPerPart;
+                                if (noteStartTime > barEndTime)
+                                    noteStartTime = barEndTime;
+                                let noteEndTime = barStartTime + note.end * midiTicksPerPart;
+                                if (noteEndTime > barEndTime)
+                                    noteEndTime = barEndTime;
+                                if (noteStartTime >= noteEndTime)
+                                    continue;
                                 let pinTime = noteStartTime;
                                 let pinSize = note.pins[0].size;
                                 let pinInterval = note.pins[0].interval;
@@ -34174,7 +34408,11 @@ li.select2-results__option[role=group] > strong:hover {
                                     const nextPinInterval = note.pins[pinIndex].interval;
                                     const length = nextPinTime - pinTime;
                                     for (let midiTick = 0; midiTick < length; midiTick++) {
-                                        const midiTickTime = pinTime + midiTick;
+                                        let midiTickTime = pinTime + midiTick;
+                                        if (midiTickTime > barEndTime) {
+                                            midiTickTime = barEndTime;
+                                            pinIndex = note.pins.length;
+                                        }
                                         const linearSize = lerp(pinSize, nextPinSize, midiTick / length);
                                         const linearInterval = lerp(pinInterval, nextPinInterval, midiTick / length);
                                         const interval = linearInterval * intervalScale - pitchOffset;
@@ -34196,24 +34434,7 @@ li.select2-results__option[role=group] > strong:hover {
                                         for (let toneIndex = 0; toneIndex < toneCount; toneIndex++) {
                                             let nextPitch = note.pitches[toneIndex];
                                             if (isDrumset) {
-                                                nextPitch += mainInterval;
-                                                const drumsetMap = [
-                                                    36,
-                                                    41,
-                                                    45,
-                                                    48,
-                                                    40,
-                                                    39,
-                                                    59,
-                                                    49,
-                                                    46,
-                                                    55,
-                                                    69,
-                                                    54,
-                                                ];
-                                                if (nextPitch < 0 || nextPitch >= drumsetMap.length)
-                                                    throw new Error("Could not find corresponding drumset pitch. " + nextPitch);
-                                                nextPitch = drumsetMap[nextPitch];
+                                                nextPitch = instrument.midiId - 101;
                                             }
                                             else {
                                                 if (usesArpeggio && note.pitches.length > toneIndex + 1 && toneIndex == toneCount - 1) {
@@ -34255,7 +34476,6 @@ li.select2-results__option[role=group] > strong:hover {
                                     pinSize = nextPinSize;
                                     pinInterval = nextPinInterval;
                                 }
-                                const noteEndTime = barStartTime + note.end * midiTicksPerPart;
                                 for (let toneIndex = 0; toneIndex < toneCount; toneIndex++) {
                                     writeEventTime(noteEndTime);
                                     writer.writeUint8(128 | midiChannel);
@@ -34335,17 +34555,6 @@ You should be redirected to the song at:<br /><br />
             this._close();
         }
     }
-    ExportPrompt.midiChipInstruments = [
-        0x4A,
-        0x47,
-        0x50,
-        0x46,
-        0x44,
-        0x51,
-        0x51,
-        0x51,
-        0x51,
-    ];
 
     const { button: button$n, div: div$n, span: span$6, h2: h2$m, input: input$g, br: br$4, select: select$c, option: option$c } = HTML;
     class BeatsPerBarPrompt {
@@ -44079,6 +44288,11 @@ You should be redirected to the song at:<br /><br />
                         message = div$5(h2$4("Instrument Number"), p("In the \"Channel Settings\" option from Slarmoo's Box's \"Edit\" menu, there are a few ways to enable multiple instruments per channel."), p("First, you could enable multiple simultaneous instruments per channel. All of the channel's instruments will play all of the notes in the channel at the same time, and you can click an instrument number to view and edit its settings."), p("Second, you could enable different instruments per pattern. Only one of the instruments will play at any given time, but you can click the instrument number to change which instrument is used for the currently selected pattern(s)."), p("Finally, you can enable them both, in which case you can click an instrument number once to view it, and again to toggle whether the instrument is used for the currently selected pattern(s)."), p("Either way, you can click the + button to add more instruments to a channel, and you can press shift and a number key on your keyboard to select an instrument as if you had clicked the corresponding button here."));
                     }
                     break;
+                case "midiID":
+                    {
+                        message = div$5(h2$4("Midi ID"), p(`Bruh. `));
+                    }
+                    break;
                 case "instrumentVolume":
                     {
                         message = div$5(h2$4("Instrument Volume"), p("This setting controls the volume of the selected instrument without affecting the volume of the other instruments. This allows you to balance the loudness of each instrument relative to each other."), p("Please be careful when using volume settings above 0. This indicates amplification and too much of that can trip the audio limiter built into this tool. This can lead to your song sounding muffled if overused. But when used carefully, amplification can be a powerful tool!"));
@@ -47027,6 +47241,9 @@ You should be redirected to the song at:<br /><br />
             this.grainRangeNum = div({ style: "font-size: 80%; ", id: "grainRangeNum" });
             this._grainRangeSliderRow = div({ class: "selectRow", style: "width:100%;" }, div({ style: "display:flex; flex-direction:column; align-items:center;" }, span({ class: "tip", style: "font-size: smaller;", onclick: () => this._openPrompt("grainRange") }, "Range: "), div({ style: `color: ${ColorConfig.secondaryText}; ` }, this.grainRangeNum)), this._grainRangeSlider.container);
             this._granularContainerRow = div({ class: "", style: "display:flex; flex-direction:column;" }, this._granularRow, this._grainAmountsRow, this._grainSizeSliderRow, this._grainRangeSliderRow);
+            this._midiSelectInputBox = input({ style: "width: 4em; font-size: 80%; ", type: "number", step: "1", min: "0", max: "188", value: "0" });
+            this._midiSelectDisplay = span({ style: `color: ${ColorConfig.secondaryText}; font-size: 80%;` });
+            this._midiSelectRow = div({ style: "" }, span({ class: "tip", style: "height:2em; font-size: smaller;", onclick: () => this._openPrompt("midiID") }, "Midi ID: "), div({ style: "color: " + ColorConfig.secondaryText + "; margin-top: -3px;" }, this._midiSelectInputBox, span({ style: "margin-left: 26px; height:2em;" }, "- "), this._midiSelectDisplay));
             this._echoSustainSlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.echoSustainRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEchoSustain(this.doc, oldValue, newValue), false);
             this._echoSustainRow = div({ class: "selectRow" }, span({ class: "tip", onclick: () => this._openPrompt("echoSustain") }, "Echo:"), this._echoSustainSlider.container);
             this._echoDelaySlider = new Slider(input({ style: "margin: 0;", type: "range", min: "0", max: Config.echoDelayRange - 1, value: "0", step: "1" }), this.doc, (oldValue, newValue) => new ChangeEchoDelay(this.doc, oldValue, newValue), false);
@@ -47236,7 +47453,7 @@ You should be redirected to the song at:<br /><br />
             this._instrumentExportGroup = div({ class: "editor-controls" }, div({ class: "selectRow" }, this._instrumentExportButton, this._instrumentImportButton));
             this._instrumentSettingsTextRow = div({ id: "instrumentSettingsText", style: `padding: 3px 0; max-width: 15em; text-align: center; color: ${ColorConfig.secondaryText};` }, "Instrument Settings");
             this._instrumentTypeSelectRow = div({ class: "selectRow", id: "typeSelectRow" }, span({ class: "tip", onclick: () => this._openPrompt("instrumentType") }, "Type:"), div(div({ class: "pitchSelect" }, this._pitchedPresetSelect), div({ class: "drumSelect" }, this._drumPresetSelect)));
-            this._instrumentSettingsGroup = div({ class: "editor-controls" }, this._instrumentSettingsTextRow, this._instrumentsButtonRow, this._instrumentTypeSelectRow, this._instrumentVolumeSliderRow, this._customInstrumentSettingsGroup);
+            this._instrumentSettingsGroup = div({ class: "editor-controls" }, this._instrumentSettingsTextRow, this._instrumentsButtonRow, this._instrumentTypeSelectRow, this._midiSelectRow, this._instrumentVolumeSliderRow, this._customInstrumentSettingsGroup);
             this._usedPatternIndicator = SVG.path({ d: "M -6 -6 H 6 V 6 H -6 V -6 M -2 -3 L -2 -3 L -1 -4 H 1 V 4 H -1 V -1.2 L -1.2 -1 H -2 V -3 z", fill: ColorConfig.indicatorSecondary, "fill-rule": "evenodd" });
             this._usedInstrumentIndicator = SVG.path({ d: "M -6 -0.8 H -3.8 V -6 H 0.8 V 4.4 H 2.2 V -0.8 H 6 V 0.8 H 3.8 V 6 H -0.8 V -4.4 H -2.2 V 0.8 H -6 z", fill: ColorConfig.indicatorSecondary });
             this._jumpToModIndicator = SVG.svg({ style: "width: 92%; height: 1.3em; flex-shrink: 0; position: absolute;", viewBox: "0 0 200 200" }, [
@@ -47958,6 +48175,7 @@ You should be redirected to the song at:<br /><br />
                     setSelectedValue(this._vibratoTypeSelect, instrument.vibratoType);
                     setSelectedValue(this._chordSelect, instrument.chord);
                     this._panSliderInputBox.value = instrument.pan + "";
+                    this._midiSelectInputBox.value = instrument.midiId + "";
                     this._pwmSliderInputBox.value = instrument.pulseWidth + "";
                     this._detuneSliderInputBox.value = (instrument.detune - Config.detuneCenter) + "";
                     this.ringModHzNum.innerHTML = " (" + calculateRingModHertz(instrument.ringModulationHz / (Config.ringModHzRange - 1)) + ")";
@@ -47971,6 +48189,7 @@ You should be redirected to the song at:<br /><br />
                     setSelectedValue(this._vibratoTypeSelect, instrument.vibratoType);
                     this._arpeggioSpeedSlider.updateValue(instrument.arpeggioSpeed);
                     this._panDelaySlider.updateValue(instrument.panDelay);
+                    this._midiSelectDisplay.textContent = midiToGM(instrument.midiId);
                     this._vibratoDelaySlider.input.title = "" + Math.round(instrument.vibratoDelay);
                     this._vibratoDepthSlider.input.title = "" + instrument.vibratoDepth;
                     this._vibratoSpeedSlider.input.title = "x" + instrument.vibratoSpeed / 10;
@@ -48724,6 +48943,7 @@ You should be redirected to the song at:<br /><br />
                     return;
                 }
                 if (document.activeElement == this._panSliderInputBox
+                    || document.activeElement == this._midiSelectInputBox
                     || document.activeElement == this._pwmSliderInputBox
                     || document.activeElement == this._detuneSliderInputBox
                     || document.activeElement == this._instrumentVolumeSliderInputBox
@@ -50272,6 +50492,7 @@ You should be redirected to the song at:<br /><br />
             this._instrumentImportButton.addEventListener("click", this._importInstruments.bind(this));
             sampleLoadEvents.addEventListener("sampleloaded", this._updateSampleLoadingBar.bind(this));
             this._instrumentVolumeSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeVolume(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].volume, Math.min(25.0, Math.max(-25.0, Math.round(+this._instrumentVolumeSliderInputBox.value))))); });
+            this._midiSelectInputBox.addEventListener("input", () => { this.doc.record(new ChangeMidiId(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].midiId, Math.min(188.0, Math.max(0.0, Math.round(+this._midiSelectInputBox.value))))); });
             this._panSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangePan(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pan, Math.min(100.0, Math.max(0.0, Math.round(+this._panSliderInputBox.value))))); });
             this._pwmSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangePulseWidth(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].pulseWidth, Math.min(Config.pulseWidthRange, Math.max(1.0, Math.round(+this._pwmSliderInputBox.value))))); });
             this._detuneSliderInputBox.addEventListener("input", () => { this.doc.record(new ChangeDetune(this.doc, this.doc.song.channels[this.doc.channel].instruments[this.doc.getCurrentInstrument()].detune, Math.min(Config.detuneMax - Config.detuneCenter, Math.max(Config.detuneMin - Config.detuneCenter, Math.round(+this._detuneSliderInputBox.value))))); });
